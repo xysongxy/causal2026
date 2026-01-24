@@ -1,0 +1,76 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1.0in]{geometry}
+\usepackage{graphicx}
+\graphicspath{ {./figures/} }
+\usepackage{bm}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{setspace}
+\usepackage{url}
+\usepackage{natbib}
+\usepackage{multirow}
+\usepackage{subfiles}
+\usepackage{hyperref}
+\usepackage{pdfpages}
+\title{Empirical connections to directed acyclic graphs (DAGs)}
+\author{Causal Inference --- Spring 2021 \\T. Ryan Johnson}
+\date{February 8, 2021}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+The purpose of this document is to point out parts of Morgan \& Winship that connect models of directed acyclic causal graphs (DAGs) to specific empirical models. I also provide a list of the sections, figures, and tables from Morgan \& Winship on which you should focus attention if you need information to supplement the slides.
+
+
+\section{Empirical Connections}
+
+Section 3.3 is titled \textit{Graphs and Structural Equations}, and calling it \textit{Graphs and Empirical Models} would have also been appropriate. Section 3.3 in Morgan \& Winship is the most direct connection to empirical models in the book. Chapter 3 \textit{Causal Graphs} is the core of the Morgan \& Winship textbook.
+
+One particular example will be useful to you. The analysis surrounding Figures 3.6 and Figure 3.7 begins in Section 3.3.1 and has two empirical models that it compares. This comparison may be useful to those who wanted a direct connection to the structural equations that correspond to a particular DAG.
+
+For additional connections to empirical models, I suggest paying close attention to the analysis surrounding Figures 8.1 and 8.2 since many people seemed to want to understand causal graphs by understanding when they fail to be causal. The analysis surrounding Figure 12.1 should also be useful.
+
+\section{Additional Resources}
+
+I only found a single good outside resource to show you, which is a working paper found at \url{http://www.columbia.edu/~mh2245/qualdag.pdf} and found in Section 2.5, which is titled \textit{A running example}. After reading and taking notes on Morgan \& Winship Chapter 3 and Section 3.3, skim up Section 2.5 of the linked working paper to familiarize yourself with notation. The discussion surrounding Figure 2 is great.
+
+\newpage
+
+\subsection*{Essential Reading}
+\begin{itemize}
+    \item 3\text{    } Causal Graphs
+    \item 4.1 Conditioning and Direct Graphs
+    \item 4.1.1 From Confounders to Back-Door Paths
+    \item 4.1.2 Conditioning on Collider Variables
+    \item 4.2 The Back-Door Criterion
+\end{itemize}
+
+\subsection*{Colliders and Confounders in Practice}
+\begin{itemize}
+    \item Figure 4.1 A graph in which the causal effect of $D$ on $Y$ is confounded by the back-door path $D \leftarrow C \rightarrow O \rightarrow Y$
+    \item Figure 4.3 A causal diagram in which $Y_{t-1}$ is a back-door path.
+    \item Figure 4.4 A causal diagram in which $A$ is a collider on a back-door path.
+    \item Figure 4.5 A causal diagram in which $Y_{t-2}$ is a collider on a back-door path and $Y_{t-1}$ is its descendant.
+    \item Figure 4.6 A confounded causal effect expressed as an indirect effect of a net direct effect.
+    \item Figure 4.7 A graph where the effect of $D$ on $Y$ is not identified by conditioning on $O$ and $B$ because $O$ is a descendant of $D$.
+\end{itemize}
+
+
+
+
+
+
+\subsection*{Connections to Empirical Models}
+\begin{itemize}
+    \item All figures in Chapter 3 \textit{Causal Graphs}
+    \item Figure 8.1 Coleman's strategy for the identification of the causal effect of Catholic schooling on achievement.
+    \item Figure 8.2 Criticism of Coleman's estimates of the effect of Catholic schooling on learning.
+    \item Table 8.1 Simulated results for the identification approach adopted by Coleman and Colleagues
+    \item Figure 12.1 A graph in which the causal effect of $D$ on $Y$ is confounded by an observed variable $C$ and an unobserved variable $U$
+\end{itemize}
+\end{document}
