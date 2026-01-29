@@ -2,6 +2,7 @@
 title: "CEF, OLS, and Causal Identification"
 author: "Causal Inference"
 date: "Spring 2025"
+format: beamer
 theme: "Boadilla"
 fontsize: 9pt
 ---
@@ -59,7 +60,7 @@ $$ \tau_{ATE} = E_X [ \underbrace{E[Y|D=1, X] - E[Y|D=0, X]}_{\delta(X) \text{ (
     $$
     \begin{aligned}
       \beta_{OLS} &= \frac{Cov(\text{residuals}_{D}, Y)}{Var(\text{residuals}_{D})} \\
-      &= \frac{E[\text{residuals}_{D}Y] - E[\text{residuals}_{D}E[y]]}{Var(\text{residuals}_{D})} \\
+      &= \frac{E[\text{residuals}_{D}Y] - E[\text{residuals}_{D}]E[y]}{Var(\text{residuals}_{D})} \\
       &=\frac{E[(D - E[D|X])Y]}{E[(D - E[D|X])^2]}\\
     \end{aligned}
     $$
