@@ -1,0 +1,313 @@
+\documentclass[10pt, handout]{beamer}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{xcolor}
+
+% Theme and Color Configuration
+% \usetheme{Madrid}
+% \usecolortheme{beaver}
+% \setbeamertemplate{frame footer}{\insertshortauthor}
+% \setbeamertemplate{footline}{\insertshortauthor~(\insertshortinstitute)\hfill\insertshorttitle}
+
+\setbeamerfont{title}{size=\large}
+\setbeamerfont{author}{size=\small}
+\setbeamerfont{date}{size=\scriptsize}
+\setbeamerfont{normal text}{size=\small}
+\setbeamerfont{frametitle}{size=\large}
+\setbeamerfont{block title}{size=\normalsize}
+\setbeamerfont{block body}{size=\small}
+\setbeamerfont{author in head/foot}{size=\tiny}
+
+\usefonttheme{serif}
+% \usepackage[scaled=0.95]{newpxtext}
+% \usepackage{newpxmath}
+\usepackage{mathpazo}
+\newcommand{\ind}{\perp\!\!\!\!\perp} 
+\DeclareMathOperator*{\Var}{Var}
+
+\definecolor{darkred}{rgb}{0.55, 0.0, 0.0}
+\definecolor{maroon(html/css)}{rgb}{0.5, 0.0, 0.0}
+\setbeamercolor{title}{fg=darkred}
+\setbeamercolor{frametitle}{fg=darkred}
+
+\setbeamercolor{theorem title}{bg=maroon(html/css)!90!white, fg=white}
+\setbeamercolor{theorem body}{bg=maroon(html/css)!20!white, fg=black}
+\setbeamercolor{block title}{bg=maroon(html/css)!90!white, fg=white}
+\setbeamercolor{block body}{bg=maroon(html/css)!20!white, fg=black}
+\setbeamercolor{author in head/foot}{fg=black!30!white}
+\setbeamercolor{title in head/foot}{fg=black!30!white}
+
+\setbeamertemplate{itemize item}[ball]
+\setbeamercolor{item}{fg=darkred}
+\setbeamercolor{itemize subitem}{fg=darkred}
+\setbeamercolor{enumerate item}{fg=darkred}
+\setbeamercolor{navigation symbols}{fg=darkred, bg=darkred!20!white}
+\setbeamertemplate{footline}{%
+  \begin{beamercolorbox}[ht=2.5ex,dp=2.5ex,%
+    leftskip=.3cm,rightskip=.3cm plus1fil]{title in head/foot}
+    \leavevmode{\usebeamerfont{title in head/foot}%
+      [\insertshorttitle, \insertframenumber]}
+  \end{beamercolorbox}%
+}
+\setbeamertemplate{navigation symbols}{}
+
+\setbeamertemplate{blocks}[rounded][shadow=true]
+
+\title[Causal Lab]{Causal Inference}
+\subtitle[]{Lab 5: Propensity Score, Matching, and Weighting}
+\author[Song]{Xiangyu Song}
+\institute{Washington University in St. Louis}
+\date{February 13, 2026}
+
+\begin{document}
+
+\maketitle
+    
+
+    \begin{frame}
+      \frametitle{Propensity Score}
+
+      \begin{definition}[Rosenbaum and Rubin (1983)]
+       Propensity score is defined as the conditional probability of receiving a treatment given pre-treatment covariates $X$:
+        \begin{align*}
+          e(X) = \Pr \left( D = 1 \mid X \right) = \mathbb{E} \left[ D \mid X \right],
+        \end{align*}
+        where $X = (X_1, \ldots, X_p)$ is the collection of $p$ covariates.
+      \end{definition}      
+      
+      \begin{itemize}
+        \item Propensity score is a probability
+        \begin{itemize}
+          \item Analogous to a summary statistic of the assignment mechanism.
+        \end{itemize}
+      \end{itemize}
+    \end{frame}
+    
+    \begin{frame}
+      \frametitle{Balancing Property of Propensity Score}
+      \begin{itemize}
+        \item Property 1. The propensity score $e(X)$ balances the distribution of all $X$ between the treatment groups:
+        \begin{align*}
+          D \ind X \mid e(X)
+        \end{align*}
+        \item Conditional on the PS, treatment is randomized.
+        \item Definition: A balancing score $b(X)$ is a function of the covariates such that
+        \begin{align*}
+          Z \ind X \mid b(X)
+        \end{align*}
+        \item Propensity score is a balancing score.
+      \end{itemize}
+    \end{frame}
+
+    
+    \begin{frame}
+      \frametitle{Balancing Scores}
+
+      \begin{itemize}
+        \item Property 2. Let $b(X)$ be a function of $X$, $b(X)$ is a balancing score if and only if $b(X)$ is finer than $e(X)$ in the sense that $e(X) = f(b(X))$ for some function $f$.
+      \end{itemize}
+
+      
+      Proof sketch:
+      \begin{enumerate}
+        \item[$\Leftarrow$]
+        \begin{itemize}
+          \item Suppose $b(X)$ is finer than $e(X)$, prove $\Pr \left( D = 1 \mid X, b(X) \right) = \Pr \left( D = 1 \mid b(X) \right)$.
+          \item LHS: $\Pr \left( D = 1 \mid X, b(X) \right) = \Pr \left( D = 1 \mid X \right) = e(X)$.
+          \item RHS: $\Pr \left( D = 1 \mid b(X) \right) = \mathbb{E} \left[ \mathbb{E} \left[ D \mid X, b(X) \right] \mid b(X) \right] = \mathbb{E} \left[ \mathbb{E} \left[ D \mid X \right] \mid b(X) \right] = \mathbb{E}\left[ e(X) \mid b(X) \right] = e(X)$.
+        \end{itemize}
+        \item[$\Rightarrow$]
+        \begin{itemize}
+          \item Suppose $b(X)$ is a balancing score but not finer than $e(X)$. Then $\exists X_1, X_2$ such that $e(X_1) \neq e(X_2)$ but $b(X_1) = b(X_2)$
+          \item $\Pr \left( D = 1 \mid X_1, b(X_1) \right) = \Pr \left( D = 1 \mid X_1 \right) \neq \Pr \left( D = 1 \mid X_2 \right) = \Pr \left( D = 1 \mid X_2, b(X_2) \right)$: $D \not\ind X \mid b(X)$
+          \item $b(X)$ cannot be a balancing score, so proof by contradiction, b(X) must be finer than $e(X)$ to be a balancing score.
+        \end{itemize}
+
+      \end{enumerate}
+    \end{frame}
+    
+
+    \begin{frame}
+      \frametitle{Balancing Scores and Propensity Score}
+
+      \begin{itemize}
+        \item Rosenbaum and Rubin (1983) showed that $e(X)$ is the coarsest balancing score, $X$ is the finest balancing score.
+        \item Knowledge of the balancing score could create a conditionally randomized trial, which supports valid causal inference (creating an ideal randomized experiment)
+        \item Mostly focus on the coarsest balancing score $e(X)$, but the general theory holds for other specification of $b(X)$.
+      \end{itemize}
+    \end{frame}
+
+
+    \begin{frame}
+      \frametitle{Remarks on the Balancing Property}
+
+      \begin{enumerate}
+        \item If a subclass of units or a matched treatment-control pair is homogeneous in $e(X)$, then the treatment and control units have the same distribution of $X$.
+        \item If a subclass of units or a matched treatment-control pair is homogeneous in both $e(X)$ and certain $X$, the other components of $X$ within those refined class is also balanced -- practical implication: estimating causal estimand in subpopulation, e.g., male of female group
+        \item The balancing property is a statement on the distribution of $X$, NOT on assignment mechanism or potential outcomes.
+      \end{enumerate} 
+
+    \end{frame}
+    
+
+    \begin{frame}
+      \frametitle{Propensity Score: Unconfoundedness}
+
+      \begin{itemize}
+        \item Property 3. If $D$ is unconfounded given $X$, then $D$ is unconfounded given $b(X)$, i.e., 
+        \begin{align*}
+          \left( Y(1), Y(0) \right) \ind D \mid X \implies \left( Y(1), Y(0) \right) \ind D \mid b(X)
+        \end{align*}
+        \item Proof. Sufficient to show
+        \begin{align*}
+          \Pr \left( D = 1 \mid Y(1), Y(0), b(X) \right) = \Pr \left( D = 1 \mid b(X) \right)
+        \end{align*}
+        \begin{enumerate}
+          \item Recall from the previous proof, RHS $\Pr \left( D = 1 \mid b(X) \right) = e(X)$.
+          \item LHS by LIE, 
+          \begin{align*}
+            \mathbb{E} &\left[ \Pr \left( D = 1 \mid Y(1), Y(0), X \right) \mid Y(1), Y(0), b(X) \right] \\
+            &= \mathbb{E} \left[ e(X) \mid Y(1), Y(0), b(X) \right] = e(X),
+          \end{align*}
+          because $b(X)$ is finer than $e(X)$
+        \end{enumerate}
+      \end{itemize}
+
+    \end{frame}
+    
+
+    \begin{frame}
+      \frametitle{Propensity Score: Unconfoundedness}
+
+      \begin{itemize}
+        \item Property 4. If $D$ is unconfounded given $X$, then $D$ is unconfounded given $e(X)$, i.e.,
+        \begin{align*}
+          \left( Y(1), Y(0) \right) \ind D \mid X \implies \left( Y(1), Y(0) \right) \ind D \mid e(X)
+        \end{align*}
+        \begin{enumerate}
+          \item Given a vector of covariates that ensure unconfoundedness, adjustment for differences in propensity scores removes all biases associated with differences in the covariates
+          \item $e(X)$ can be viewed as a summary score of the observed covariates
+          \item Causal inference can be drawn through stratification, matching, weighting, etc. using the scalar $e(X)$ instead of high dimensional covariates (dimension reduction).
+        \end{enumerate}
+      \end{itemize}
+
+    \end{frame}
+    
+
+    \begin{frame}
+      \frametitle{Propensity Score: Remarks}
+
+      \begin{itemize}
+        \item Controlling for propensity score (or more generally, balancing score)
+        \begin{itemize}
+          \item Create a conditionally randomized trial $\left( Y(1), Y(0) \right) \ind D \mid e(X)$
+          \item Balances covariates between groups $D \ind X \mid e(X)$
+        \end{itemize}
+        \item Propensity score balances the observed covariates but does not generally balance unobserved covariates
+        \item Adjusting for differences in $e(X)$ can remove bias due to $X$
+        \item In most observational studies, the propensity score $e(X)$ is unknown and thus needs to be estimated
+      \end{itemize}
+
+    \end{frame}
+
+    \begin{frame}
+      \frametitle{Propensity Score Analysis of Causal Effects}
+      
+      \begin{enumerate}
+        \item Estimate $e(X)$ by logistic regression of machine learning methods
+        \item Given $\hat{e}(X)$, estimate the causal effects through
+        \begin{itemize}
+          \item Subclassification
+          \item Matching
+          \item Regression
+          \item Weighting
+          \item Mixed procedure of the above
+        \end{itemize}
+      \end{enumerate}
+      
+
+    \end{frame}
+    
+
+
+    \begin{frame}
+      \frametitle{Propensity Score Matching}
+
+      \begin{itemize}
+        \item Special case of matching: the distance metric is the (estimated) propensity score
+        \item 1-to-$k$ nearest neighbor matching is common when the control group is large compared to treatment group
+        \item Pros: robust, popular, vast literature, and intuitive to understand
+        \item Cons: inefficient (check Abadie and Imbens (2006)) for closed form variance expression
+      \end{itemize}
+
+    \end{frame}
+
+
+    \begin{frame}
+      \frametitle{Propensity Score Weighting}
+
+      \begin{itemize}
+        \item Most common approach for causal inference with observational data
+        \item Intuitive: reweighting to mimic randomized treatment assignment
+        \item Flexible: extends to binary, multi-valued, and continuous treatments
+        \item Transparent: balance diagnostics and effective sample size
+        \item Limitations: instability with extreme weights
+      \end{itemize}
+    \end{frame}
+  
+
+    \begin{frame}
+      \frametitle{Inverse Probability Weighting (IPW)}
+
+      \begin{itemize}
+        \item Easy to show
+        \begin{align*}
+          \mathbb{E} \left[ \frac{DY}{e(X)} - \frac{(1 - D)Y}{1 - e(X)} \right] = \tau^{\text{ATE}}.
+        \end{align*}
+        \item Observe
+        \begin{align*}
+          \mathbb{E} \left[ \frac{DY}{e(X)} \right] = \mathbb{E} \left[ \frac{1}{e(X)} \mathbb{E} \left[ DY(1) \mid X \right] \right] = \mathbb{E} \left[ \frac{\mathbb{E} \left[ D \mid X \right]}{e(X)} \mathbb{E} \left[ Y(1) \mid X \right] \right]
+        \end{align*}
+      \end{itemize} 
+
+    \end{frame}
+
+
+    \begin{frame}
+      \frametitle{Inverse Probability Weighting (IPW), cont.}
+
+      \begin{itemize}
+        \item Define the inverse probability weights (IPW)
+        \begin{align*}
+          \begin{cases}
+          w_1(X_i) = \frac{1}{e(X_i)}, & D_i = 1\\
+          w_0(X_i) = \frac{1}{1 - e(X_i)} & D_i = 0
+        \end{cases}
+        \end{align*} 
+        \item An unbiased moment-type estimator of ATE: difference in the mean of the weighted outcomes between groups
+        \begin{align*}
+          \hat{\tau}_{\text{IPW, 1}} &= \frac{1}{N} \left( \sum_{i=1}^N \frac{Y_i D_i}{e(X_i)} - \sum_{i=1}^N \frac{Y_i (1 - D_i)}{1 - e(X_i)} \right)\\
+          &= \frac{1}{N} \sum_{i=1}^N \left( Y_i D_i w_1(X_i) - Y_i (1 - D_i) w_0(X_i) \right)
+        \end{align*}
+      \end{itemize}
+
+    \end{frame}
+    
+
+    \begin{frame}
+      \frametitle{Normalize the Weights}
+
+      \begin{itemize}
+        \item When using any weighting methods, a good practice is to normalize the weights - sum of the total weights within one group should be 1
+        \item Divide each unit's weight by the sum of all weights in that group $\frac{w_i}{\sum_{i: D = d} w_i}$ for $d = 0, 1$, i.e., the Hajek estimator:
+        \begin{align*}
+          \hat{\tau}_{\text{IPW, 2}} &= \frac{\sum_{i = 1}^N Y_i D_i w_1(X_i)}{\sum_{i = 1}^N D_i w_1(X_i)} - \frac{\sum_{i = 1}^N Y_i (1 - D_i) w_0(X_i)}{\sum_{i = 1}^N (1 - D_i) w_0(X_i)}.
+        \end{align*}
+        \item Reduce variance: $\Var \left( \hat{\tau}_{\text{IPW, 2}} \right) \leq \Var \left( \hat{\tau}_{\text{IPW, 1}} \right)$, and lead to more stable estimate (Hirano et al. 2003)
+      \end{itemize}
+
+      
+
+    \end{frame}
+
+\end{document}
