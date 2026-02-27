@@ -1,0 +1,255 @@
+\documentclass[10pt, handout]{beamer}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{xcolor}
+
+% Theme and Color Configuration
+% \usetheme{Madrid}
+% \usecolortheme{beaver}
+% \setbeamertemplate{frame footer}{\insertshortauthor}
+% \setbeamertemplate{footline}{\insertshortauthor~(\insertshortinstitute)\hfill\insertshorttitle}
+
+\setbeamerfont{title}{size=\large}
+\setbeamerfont{author}{size=\small}
+\setbeamerfont{date}{size=\scriptsize}
+\setbeamerfont{normal text}{size=\small}
+\setbeamerfont{itemize/enumerate body}{size=\small}
+\setbeamerfont{itemize/enumerate subbody}{size=\footnotesize}
+\setbeamerfont{frametitle}{size=\large}
+\setbeamerfont{block title}{size=\normalsize}
+\setbeamerfont{block body}{size=\small}
+\setbeamerfont{author in head/foot}{size=\tiny}
+
+\usefonttheme{serif}
+% \usepackage[scaled=0.95]{newpxtext}
+% \usepackage{newpxmath}
+\usepackage{mathpazo}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\DeclareMathOperator{\Var}{Var}
+
+\definecolor{darkred}{rgb}{0.55, 0.0, 0.0}
+\definecolor{maroon(html/css)}{rgb}{0.5, 0.0, 0.0}
+\setbeamercolor{title}{fg=darkred}
+\setbeamercolor{frametitle}{fg=darkred}
+
+\setbeamercolor{theorem title}{bg=maroon(html/css)!90!white, fg=white}
+\setbeamercolor{theorem body}{bg=maroon(html/css)!20!white, fg=black}
+\setbeamercolor{block title}{bg=maroon(html/css)!90!white, fg=white}
+\setbeamercolor{block body}{bg=maroon(html/css)!20!white, fg=black}
+\setbeamercolor{author in head/foot}{fg=black!30!white}
+\setbeamercolor{title in head/foot}{fg=black!30!white}
+
+\setbeamertemplate{itemize item}[ball]
+\setbeamercolor{item}{fg=darkred}
+\setbeamercolor{itemize subitem}{fg=darkred}
+\setbeamercolor{enumerate item}{fg=darkred}
+\setbeamercolor{navigation symbols}{fg=darkred, bg=darkred!20!white}
+\setbeamertemplate{footline}{%
+  \begin{beamercolorbox}[ht=2.5ex,dp=2.5ex,%
+    leftskip=.3cm,rightskip=.3cm plus1fil]{title in head/foot}
+    \leavevmode{\usebeamerfont{title in head/foot}%
+      [\insertshorttitle, \insertframenumber]}
+  \end{beamercolorbox}%
+}
+\setbeamertemplate{navigation symbols}{}
+
+\setbeamertemplate{blocks}[rounded][shadow=true]
+
+\title[Causal Lab]{Causal Inference}
+\subtitle[]{Lab 7: Bias-Corrected Matching}
+\author[Song and Park]{Xiangyu Song and Chanhyuk Park}
+\institute{Washington University in St. Louis}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}
+  \frametitle{Matching as a Pre-Processing Step}
+
+  \begin{itemize}
+    \item We have covered matching in randomized experiments.
+    \item Matching can be used as a pre-processing step for causal inference with observational data
+    \begin{enumerate}
+      \item Use a generic matching method to obtain a matched sample (noting optimal), to ensure good balance
+      \item Then use regression (e.g., bias-corrected) or weighting on the matched sample to correct for residual imbalance and improve efficiency
+    \end{enumerate}
+    \item Empirical results show that once a matched sample with reasonable balance is obtained, the point estimates from different additional methods are usually similar
+    \item In high dimensional cases, combining matching (or stratification or weighting) with regression is the way to go (i.e., augmented or double learning)
+    \item Matching is the starting point, not the end
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Mix Matching with Regression}
+
+  \begin{itemize}
+    \item Matching and regression are strongly connected, but why doing matching and regression separately?
+    \item Residual imbalance in matching can be addressed via regression adjustment
+    \item Rubin (1973): perform bias correction via regression on the matched sample
+    \item Abadie and Imbens (2006): provided the theoretical basis and software for bias-corrected matching estimator
+    \item Let $\mu_{d} (\mathbf{x}) = \mathbb{E} \left[ Y(d) \mid \mathbf{X}_i = \mathbf{x} \right]$, and $\hat{\mu}_d (\mathbf{X}_i)$ be consistent estimator of $\mu_d(\mathbf{X}_i)$, for $d = 0, 1$. A regression estimator uses $\hat{\mu}_d(\mathbf{X}_i)$ to impute missing potential outcomes $Y_i(d)$. 
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Bias-Corrected Matching: Formal Definition}
+
+  \begin{itemize}
+    \item Combine matching with regression adjustment for residual imbalance:
+    \begin{align*}
+      \tilde{Y}_i(0) = \begin{cases}
+        Y_i, & D_i = 0, \\
+        \frac{1}{M} \sum_{j \in \mathcal{M}_i} \left[ Y_j + \hat{\mu}_0(\mathbf{X}_i) - \hat{\mu}_0(\mathbf{X}_j) \right], & D_i = 1,
+      \end{cases}\\
+      \tilde{Y}_i(1) = \begin{cases}
+        \frac{1}{M} \sum_{j \in \mathcal{M}_i} \left[ Y_j + \hat{\mu}_1(\mathbf{X}_i) - \hat{\mu}_1(\mathbf{X}_j) \right], & D_i = 0, \\
+        Y_i, & D_i = 1.
+      \end{cases}
+    \end{align*}
+    \item The bias-corrected matching estimators:
+    \begin{align*}
+      \hat{\tau}^{\text{bcm, ATE}} = \frac{1}{N} \sum_{i=1}^N \left( \tilde{Y}_i(1) - \tilde{Y}_i(0) \right)\\
+      \hat{\tau}^{\text{bcm, ATT}} = \frac{1}{N_1} \sum_{i=1}^N \left( Y_i - \tilde{Y}_i(0) \right) D_i
+    \end{align*}
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Connections between Matching and Regression}
+
+  \begin{itemize}
+    \item Both matching and regression estimators impute missing potential outcomes
+    \item For unit $i$ with $D_i = 0$, we observed $Y_i(0)$ but need to impute $Y_i(1)$
+    \item \textbf{Regression imputation}: uses $\hat{\mu}_1(\mathbf{X}_i)$ where $\hat{\mu}_d(\mathbf{x})$ is a consistent estimator of $\mu_d(\mathbf{x}) = \mathbb{E}\left[ Y \mid \mathbf{X}_i = \mathbf{x}, D = d \right]$
+    \begin{align*}
+      \tilde{Y}_i(1) = \begin{cases}
+        \hat{\mu}_1(\mathbf{X}_i) & \text{if } D_i = 0, \\
+        Y_i, & \text{if } D_i = 1
+      \end{cases}
+    \end{align*}
+    \item \textbf{Matching}: uses average of $M$ nearest neighbors
+    \begin{align*}
+      \hat{Y}_i(1) = \begin{cases}
+        \frac{1}{M} \sum_{j \in \mathcal{M}_i} Y_j & \text{if } D_i = 0, \\
+        Y_i, & \text{if } D_i = 1
+      \end{cases}
+    \end{align*}
+    \item Key insight: Matching is a nearest-neighbor estimate of $\mu_1(\mathbf{X}_i)$, but with fixed $M$ as $N \to \infty$, hence it does NOT consistently estimate $\mu_1(\mathbf{X}_i)$.
+  \end{itemize}
+    
+\end{frame}
+
+\begin{frame}
+  \frametitle{From simple to Bias-Corrected Matching}
+
+  \begin{itemize}
+    \item Consider imputing $Y_i(1)$ for unit $i$ with $D_i = 0$
+    \item Simple matching:
+    \begin{align*}
+      \hat{Y}_i(1) = \frac{1}{M} \sum_{j \in \mathcal{M}_i} Y_j
+    \end{align*}
+    \item Bias-corrected matching (Rubin 1973; Abadie and Imbens 2011):
+    \begin{align*}
+      \tilde{Y}_i(1) &= \frac{1}{M} \sum_{j \in \mathcal{M}_i} \left[ Y_j + \hat{\mu}_1(\mathbf{X}_i) - \hat{\mu}_1(\mathbf{X}_j) \right]\\
+      &= \hat{Y}_i(1) + \underbrace{\left[ \hat{\mu}_1 (\mathbf{X}_i) - \frac{1}{M} \sum_{j \in \mathcal{M}_i} \hat{\mu}_1(\mathbf{X}_j) \right]}_{\text{bias correction}}
+    \end{align*}
+    \item Since $\norm{\mathbf{X}_i - \mathbf{X}_j}$ is small for $j \in \mathcal{M}_i$, adjustment is small
+    \item But this small adjustment removes the bias of simple matching estimator asymptotically!
+  \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{An Alternative Representation via Bias-Corrected Regression}
+
+  \begin{itemize}
+    \item Bias-corrected matching can also be viewed from regression side:
+    \item For unit $i$ with $D_i = 0$, the imputation is 
+    \begin{align*}
+      \tilde{Y}_i(1) = \underbrace{\hat{\mu}_1(\mathbf{X}_i)}_{\text{regression imputation}} + \underbrace{\frac{1}{M} \sum_{j \in \mathcal{M}_i} \left[ Y_j - \hat{\mu}_1(\mathbf{X}_j) \right]}_{\text{robustness via local averaging}}
+    \end{align*}
+    \item Interpretation:
+    \begin{itemize}
+      \item Start with regression estimator $\hat{\mu}_1(\mathbf{X}_i)$
+      \item Add local correction using actual outcomes near $\mathbf{X}_i$
+      \item The correction term provides robustness against misspecification
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{More Insights}
+
+  \begin{itemize}
+    \item Comparison of properties under misspecification
+    \begin{itemize}
+      \item Regression: if $\hat{\mu}_d$ is misspecified, estimator is inconsistent.
+      \item Matching: robust but biased asymptotically
+      \item Bias-corrected: robust against misspecification of regression function
+    \end{itemize}
+    \item The why (Abadie and Imbens 2011):
+    \begin{itemize}
+      \item Under weak assumptions, $\frac{1}{M} \sum_{j \in \mathcal{M}_i} Y_j \to \mu_d(\mathbf{X}_i)$
+      \item If regression is misspecified, bias correction $\approx \mu_d(\mathbf{X}_i) - \hat{\mu}_d (\mathbf{X}_i)$
+      \item This eliminates inconsistency from regression imputation
+      \item If regression is correct, adding $\frac{1}{M} \sum_{j \in \mathcal{M}_i} \left[ Y_j - \hat{\mu}_d(\mathbf{X}_j) \right]$ only adds noise
+    \end{itemize}
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Large Sample Properties of Matching Estimators}
+
+  \begin{itemize}
+    \item The simple matching estimator can be decomposed (Abadies and Imbens 2006):
+    \begin{align*}
+      \hat{\tau}_{M}^{\text{ATE}} - \tau = \underbrace{\left( \overline{\tau(\mathbf{X})} - \tau \right)}_{\text{sampling var.}} + \underbrace{D_M}_{\text{weighted residuals}} + \underbrace{B_M}_{\text{conditional bias}}
+    \end{align*}
+    where
+    \begin{itemize}
+      \item $\overline{\tau(\mathbf{X})} = \frac{1}{N} \sum_{i = 1}^N \left[ \mu_1(\mathbf{X}_i) - \mu_0(\mathbf{X}_i) \right]$ 
+      \item $D_M = \frac{1}{N} \sum_{i = 1}^N \left( 2D_i - 1 \right) \left( 1 + \frac{K_M(i)}{M} \right)\varepsilon_i$, where $\varepsilon_i = Y_i - \mu_{D_i}(\mathbf{X}_i)$
+      \item $B_M =\frac{1}{N} \sum_{i = 1}^N \frac{2D_i - 1}{M} \sum_{j = 1}^M \left[ \mu{1 - D_i}(\mathbf{X}_i) - \mu_{1 - D_i}(\mathbf{X}_{l_j(i)}) \right]$
+      \item $K_M(i) = $ number of times unit $i$ is used as a match
+    \end{itemize}
+    \item First two terms: mean zero, $O_p \left( N^{-1 / 2} \right)$, asymptotically normal 
+    \item Bias term $B_M$: $O_p \left( N^{-1 / p} \right)$ where $p = $ dimension of covariates
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Large Sample Properties of Matching Estimators}
+
+  \begin{itemize}
+    \item Conditional variance of simple matching (Abadie and Imbens 2006):
+    \begin{align*}
+      \Var \left( \hat{\tau}_{M}^{\text{ATE}} \mid \mathbf{X}, \mathbf{D} \right) = \Var \left( D_M \mid \mathbf{X}, \mathbf{D} \right)  = \frac{1}{N^2} \sum_{i = 1}^N \left( 1 + \frac{K_M(i)}{M} \right)^2 \sigma_{D_i}^2 (\mathbf{X_i})
+    \end{align*}
+    where $\sigma_{D_i}^2 (\mathbf{X_i}) = \Var \left( \varepsilon_i \mid \mathbf{X}_i = \mathbf{x}, D_i = d \right)$
+    \item Let $V^E = N \Var \left( \hat{\tau}_{M}^{\text{ATE}} \mid \mathbf{X}, \mathbf{D} \right)$, and $V^{\tau(\mathbf{X})} = \mathbb{E}\left[ (\tau(\mathbf{X}_i) - \tau)^2 \right]$, where $\tau(\mathbf{x}) = \mathbb{E}\left[ Y_i(1) - Y_i(0) \mid \mathbf{X}_i = \mathbf{x} \right]$
+    \item Asymptotic normality (Abadie and Imbens (2006), Theorem 1):
+    \begin{align*}
+      \left\{ V^E + V^{\tau(\mathbf{X})} \right\}^{-1/2} \sqrt{N} \left( \hat{\tau}_{M}^{\text{ATE}} - B_M - \tau \right) \xrightarrow{d} \mathcal{N}(0, 1)
+    \end{align*}
+    \item Crucial insight: simple matching itself only achieves $\sqrt{N}$-consistency when $p = 1$ (e.g., true propensity score) since $B_M = O_p \left( N^{-1 / p} \right)$. Bias-corrected matching removes $B_M$, achieving asymptotic normality for any $p$:
+    \begin{align*}
+      \left\{ V^E + V^{\tau(\mathbf{X})} \right\}^{-1/2} \sqrt{N} \left( \hat{\tau}_M^{\text{bcm, ATE}} - \tau \right) \xrightarrow{d} \mathcal{N}(0, 1)
+    \end{align*}
+  \end{itemize}
+
+  
+
+\end{frame}
+
+\end{document}
