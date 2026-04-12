@@ -1,0 +1,190 @@
+\documentclass[handout]{beamer}
+\usetheme{Boadilla}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{graphicx}
+\beamerdefaultoverlayspecification{<+->}
+
+\title{Lab 10: Review}
+\subtitle{Causal Inference}
+\author{Chanhyuk Park and Xiangyu Song}
+\institute{Washington University in St. Louis}
+\date{}
+
+\begin{document}
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}{Topics}
+    \begin{itemize}
+        \item Potential Outcomes Framework
+        \item Randomized Experiment
+        \item Observational Studies
+        \item Instrumental Variable
+        \item Regression Discontinuity
+        \item DID and TWFE
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Potential Outcomes Framework}
+    \begin{itemize}
+        \item Notations: $Y(0), Y(1), D$
+        \item Fundamental problem of causal inference: only one of $Y_i(0)$ and $Y_i(1)$ can be observed
+        \item Treatment effects
+            \begin{enumerate}
+                \item $\mathrm{ATE} = \mathbb{E}\left[ Y_i(1) - Y_i(0) \right] $
+                \item $\mathrm{ATT} = \mathbb{E}\left[ Y_i(1) - Y_i(0) \mid D_i = 1 \right] $
+                \item $\mathrm{ATC} = \mathbb{E}\left[ Y_i(1) - Y_i(0) \mid D_i = 0 \right] $
+            \end{enumerate}
+        \item SUTVA
+            \begin{enumerate}
+                \item No interference
+                \item No different version of treatment
+            \end{enumerate}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Randomized Experiment}
+    \begin{itemize}
+        \item Selection bias
+            $$
+            \begin{aligned}
+                &\mathbb{E}\left[ Y(1) \mid D = 1 \right] - \mathbb{E}\left[ Y(0) \mid D = 0 \right] \\
+                &= \mathbb{E}\left[ Y(1) \mid D = 1 \right] - \mathbb{E}\left[ Y(0) \mid D = 1 \right] \\ 
+                &\quad + \mathbb{E}\left[ Y(0) \mid D = 1 \right] - \mathbb{E}\left[ Y(0) \mid D = 0 \right] \\
+                &= \mathbb{E}\left[ Y(1) - Y(0) \mid D = 1 \right] + \mathbb{E}\left[ Y(0) \mid D = 1 \right] - \mathbb{E}\left[ Y(0) \mid D = 0 \right] \\
+                &= \mathrm{ATT} + \mathrm{Selection Bias}
+            \end{aligned}
+            $$
+        \item Randomization (Ignorability Assumption)
+            $$
+            \left\{ Y(1), Y(0) \right\} \perp\!\!\!\perp D
+            $$ 
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Randomized Experiment}
+    \begin{itemize}
+        \item Identification: If you can observe data from an entire population, can you learn about your quantity of interest?
+            \begin{itemize}
+                \item Estimand: The theoretical target (population) quantity
+            \end{itemize}
+        \item Estimation: Given your finite amount of data on a sample, how well can you learn about your quantity of interest?
+            \begin{itemize}
+                \item Estimator: A statistical model or method we use to estimate the estimand
+                \item Estimate: The number we get from estimation
+                \item (Un)biased estimator: $\hat{\tau} = \tau + \text{bias}$
+                \item What does OLS estimate?
+            \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Observational Studies}
+\begin{itemize}
+    \item Conditional Ignorability / Independence
+        $$
+            \left\{ Y(1), Y(0) \right\} \perp\!\!\!\perp D \mid X \quad \forall x in \mathcal{X}
+        $$ 
+    \item Overlap / Positivity
+        $$
+            0 < \mathbb{P}\left( D = 1 \mid X \right) < 1 \quad \forall x in \mathcal{X}
+        $$ 
+    \item Under these + SUTVA
+        $$
+        \begin{aligned}
+            \mathrm{ATE} &= \mathbb{E}_{X}\left[ \mathbb{E}\left[ Y(1) \mid X \right] - \mathbb{E}\left[ Y(0) \mid X \right]  \right] \\
+            \mathrm{ATT} &= \mathbb{E}\left[ Y(1) \mid D = 1 \right] - \mathbb{E}_{X}\left[ \mathbb{E}\left[ Y(0) \mid X, D = 1 \right]  \right] \\
+        \end{aligned}
+        $$ 
+    \item Post treatment bias: post treatment variable $S$ also has potential forms
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Observational Studies}
+\begin{itemize}
+    \item Backdoor Criterion
+        \begin{enumerate}
+            \item Control all confounders
+            \item Do not control colliders (post treatment variables can be one of these)
+        \end{enumerate}
+    \item Propensity score
+        $$
+            \pi(X) = \mathbb{P}\left( D = 1 \mid X \right)
+        $$ 
+        \begin{enumerate}
+            \item Balancing property
+                $$
+                    D \perp\!\!\!\perp X \mid \pi(X)
+                $$ 
+            \item Raw $X$ is the finest balancing score $\pi(X)$ is the coarsest balancing score
+        \end{enumerate}
+    \item IPW estimator (Slide 24 - 25, Observational Studies II)
+\end{itemize}
+\end{frame}
+        
+\begin{frame}{Instrumental Variable}
+    \begin{itemize}
+        \item Assumptions
+            \begin{enumerate}
+                \item Exclusion restriction
+                \item Relevance
+                \item (Weak) Monotonicity
+            \end{enumerate}
+        \item $\mathrm{ITT} = \mathrm{ITT}_C \mathbb{P}\left( C \right) + \mathrm{ITT}_A \mathbb{P}\left( A \right) + \mathrm{ITT}_N \mathbb{P}\left( N \right) + \mathrm{ITT}_D \mathbb{P}\left( D \right)  $
+        \item LATE = WALD estimator
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Regression Discontinuity}
+\begin{itemize}
+    \item Assumptions
+        \begin{enumerate}
+            \item Continuity of average potential outcomes around the cut points = limits should exist from both sides
+        \end{enumerate}
+    \item Fuzzy RD as IV
+        \begin{enumerate}
+            \item Local IV style assumptions (relevance, exclusion restriction, and monotonicity)
+        \end{enumerate}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{DID and TWFE}
+    \begin{itemize}
+        \item Parallel Trends Assumption
+            $$
+            \mathbb{E}[Y_{i1}(0) - Y_{i0}(0) \mid G_i = 1] = \mathbb{E}[Y_{i1}(0) - Y_{i0}(0) \mid G_i = 0]
+            $$ 
+        \item 
+            \begin{tabular}{l|c|c}
+                \toprule
+                & Pre-Period ($t=0$) & Post-Period ($t=1$) \\
+                \midrule
+                Treatment Group ($G_i = 1$) & $\mathbb{E}[Y_{i0}(0)|G_i = 1]$ & $\mathbb{E}[Y_{i1}(1)|G_i = 1]$ \\
+                Control Group ($G_i = 0$)   & $\mathbb{E}[Y_{i0}(0)|G_i = 0]$ & $\mathbb{E}[Y_{i1}(0)|G_i = 0]$ \\
+                \bottomrule
+            \end{tabular}
+        \item ATT
+            $$
+            \begin{aligned}
+                & \mathbb{E}[Y_{i1} \mid G_i = 1] - \mathbb{E}[Y_{i1} \mid G_i = 0] - (\mathbb{E}[Y_{i0} \mid G_i = 1] - \mathbb{E}[Y_{i0} \mid G_i = 0]) \\
+                &= \tau_{\text{ATT}} + \{ \mathbb{E}[Y_{i1}(0) - Y_{i0}(0) \mid G_i = 1] - \mathbb{E}[Y_{i1}(0) - Y_{i0}(0) \mid G_i = 0] \}\\
+            \end{aligned}
+            $$
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{DID and TWFE}
+\begin{itemize}
+    \item Conditional PTA
+            $$
+            \mathbb{E}[Y_{i1}(0) - Y_{i0}(0) \mid G_i = 1, X_i] = \mathbb{E}[Y_{i1}(0) - Y_{i0}(0) \mid G_i = 0, X_i]
+            $$ 
+    \item TWFE = DID 2 x 2
+    \item TWFE with limited variation
+\end{itemize}
+\end{frame}
+
+\end{document}
