@@ -1,0 +1,599 @@
+\documentclass[10pt]{beamer}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage[]{xcolor}
+\usepackage{tikz}
+
+\setbeamerfont{title}{size=\large}
+\setbeamerfont{author}{size=\small}
+\setbeamerfont{date}{size=\scriptsize}
+\setbeamerfont{normal text}{size=\small}
+\setbeamerfont{frametitle}{size=\large}
+\setbeamerfont{block title}{size=\normalsize}
+\setbeamerfont{block body}{size=\small}
+\setbeamerfont{author in head/foot}{size=\tiny}
+
+\setbeamerfont{itemize/enumerate body}{size=\small}
+\setbeamerfont{itemize/enumerate subbody}{parent=itemize/enumerate body, size=\footnotesize}
+\setbeamerfont{itemize/enumerate subsubbody}{parent=itemize/enumerate body, size=\scriptsize}
+
+\usefonttheme{serif}
+\usepackage{mathpazo}
+
+\definecolor{darkred}{rgb}{0.55, 0.0, 0.0}
+\definecolor{maroon(html/css)}{rgb}{0.5, 0.0, 0.0}
+\definecolor{hanada}{HTML}{006284}
+\setbeamercolor{title}{fg=darkred}
+\setbeamercolor{frametitle}{fg=darkred}
+
+\setbeamercolor{theorem title}{bg=maroon(html/css)!90!white, fg=white}
+\setbeamercolor{theorem body}{bg=maroon(html/css)!20!white, fg=black}
+\setbeamercolor{block title}{bg=maroon(html/css)!90!white, fg=white}
+\setbeamercolor{block body}{bg=maroon(html/css)!20!white, fg=black}
+\setbeamercolor{author in head/foot}{fg=black!30!white}
+\setbeamercolor{title in head/foot}{fg=black!30!white}
+
+\setbeamertemplate{itemize item}[ball]
+\setbeamercolor{item}{fg=darkred}
+\setbeamercolor{itemize subitem}{fg=darkred}
+\setbeamercolor{enumerate item}{fg=darkred}
+\setbeamercolor{navigation symbols}{fg=darkred, bg=darkred!20!white}
+\setbeamertemplate{footline}{%
+  \begin{beamercolorbox}[ht=2.5ex,dp=2.5ex,%
+    leftskip=.3cm,rightskip=.3cm plus1fil]{title in head/foot}
+    \leavevmode{\usebeamerfont{title in head/foot}%
+      [\insertshorttitle, \insertframenumber]}
+  \end{beamercolorbox}%
+}
+\setbeamertemplate{navigation symbols}{}
+
+\setbeamertemplate{blocks}[rounded][shadow=true]
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+
+\title[Partial Identification]{Partial Identification}
+\subtitle{Causal Inference: Spring 2026}
+\author[Song]{Xiangyu Song}
+\institute{Washington University in St. Louis}
+\date{April 14, 2026}
+
+\begin{document}
+
+\maketitle
+
+%% ============================================================
+%% OUTLINE
+%% ============================================================
+
+\begin{frame}{Outline}
+  \begin{enumerate}
+    \item Motivation: Why Partial Identification?
+    \vspace{0.3cm}
+    \item Bounds on Treatment Effects
+    \vspace{0.3cm}
+    \item Manski Worst-Case Bounds
+    \vspace{0.3cm}
+    \item Tightening Bounds with Assumptions
+    \vspace{0.3cm}
+    \item Lee (2009) Bounds
+    \vspace{0.3cm}
+    \item Inference for Partially Identified Parameters
+
+  \end{enumerate}
+\end{frame}
+
+%% ============================================================
+%% PART 1: MOTIVATION
+%% ============================================================
+
+\begin{frame}
+  \frametitle{}
+  
+  \begin{block}{}
+    ``The law of decreasing credibility: The credibility of inference decreases with the strength of the assumptions maintained.''\\
+    \hfill --- Manski (2003)
+  \end{block}
+  \begin{itemize}
+    \item Identification should not be a binary process whether the parameter is point identified or not
+      \item Given the data, various assumptions provide a menu of estimates
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Point Identification vs.\ Partial Identification}
+  \begin{itemize}
+    \item \textbf{Point identification}: assumptions $+$ data $\Rightarrow$ a single value of the parameter
+      \begin{itemize}
+        \item Randomized Experiment $\Rightarrow$ $\text{ATE} = \E[Y \mid D=1] - \E[Y \mid D=0]$
+      \end{itemize}
+      \item \textbf{Partial identification}: restricted assumptions $+$ data $\Rightarrow$ an \textbf{identified set} of the parameter
+      \begin{itemize}
+        \item We learn that $\theta \in [\theta_L, \theta_U]$ rather than $\theta = \theta_0$
+        \item Intuition
+        \begin{itemize}
+          \item models as a set of assumptions, some of which are plausible while others are only needed to complete a model (e.g., functional forms) 
+          \item Partial identification is a way to analyze the sensitivity of the inference to those latter assumptions
+        \end{itemize}      
+      \end{itemize}
+      \item Every point-identification result is a special case where the identified set is a singleton (Manski, 2003)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Why Partial Identification?}
+  \begin{itemize}
+    \item Many credible research designs \textit{cannot} point-identify the parameter of interest
+      \begin{itemize}
+        \item Missing data / sample selection
+        \item Noncompliance in experiments
+        \item Measurement error
+        \item Relaxing functional form or distributional assumptions
+      \end{itemize}
+      \item The trade-off:
+      \begin{itemize}
+        \item Point identification requires \textbf{strong} (often untestable) assumptions
+        \item Partial identification requires \textbf{weaker} assumptions but yields a \textbf{set}
+      \end{itemize}
+      \item ``It is better to be vaguely right than precisely wrong'' (Manski, 2003)
+    \item Stronger assumptions $\Rightarrow$ narrower identified set
+    \item Goal: find the \textit{weakest} assumptions that yield \textit{informative} bounds
+  \end{itemize}
+\end{frame}
+
+%% ============================================================
+%% PART 2: SETUP AND WORST-CASE BOUNDS
+%% ============================================================
+
+\begin{frame}{Setup: The Selection Problem}
+  \begin{itemize}
+    \item Potential outcomes: $Y(1), Y(0)$ for each unit
+    \item Treatment indicator: $D \in \{0,1\}$
+    \item Observed outcome: $Y = D \cdot Y(1) + (1-D) \cdot Y(0)$
+    \item \textbf{Fundamental problem}: we observe $Y(1)$ only if $D=1$, and $Y(0)$ only if $D=0$
+    \item Target: Average Treatment Effect
+      $$
+        \text{ATE} = \E[Y(1)] - \E[Y(0)]
+      $$
+    \item Without any assumptions on the relationship between $D$ and $(Y(1), Y(0))$, what can we learn?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Manski's Worst-Case Bounds}
+  \begin{itemize}
+    \item By the law of total expectation:
+      $$
+        \E[Y(1)] = \E[Y(1) \mid D=1]\, \Pr(D=1) + \E[Y(1) \mid D=0]\, \Pr(D=0)
+      $$
+    \item We observe $\E[Y(1) \mid D=1]$ and $\Pr(D=1)$
+    \item We do \textbf{not} observe $\E[Y(1) \mid D=0]$ --- the counterfactual
+    \item If $Y \in [y_{\min}, y_{\max}]$ (bounded support), then:
+      $$
+        \E[Y(1) \mid D=0] \in [y_{\min},\; y_{\max}]
+      $$
+    \item Similar for $\E[Y(0) \mid D = 1]$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Worst-Case Bounds on ATE}
+  \begin{block}{Manski (1990) Worst-Case Bounds}
+    If $Y \in [y_{\min}, y_{\max}]$, the sharp bounds on the ATE are:
+    \begin{align*}
+      &\E[Y \mid D=1]\,p + y_{\min}(1-p) - \E[Y \mid D=0](1-p) - y_{\max}\, p \\
+      \leq\; &\text{ATE} \leq \\
+      &\E[Y \mid D=1]\,p + y_{\max}(1-p) - \E[Y \mid D=0](1-p) - y_{\min}\, p
+    \end{align*}
+    where $p = \Pr(D=1)$.
+  \end{block}
+  \begin{itemize}
+    \item Width of bounds: $(y_{\max} - y_{\min})$ --- the full range of $Y$
+    \item These bounds are \textbf{sharp}: no tighter bounds exist without additional assumptions
+    \item Often very wide $\Rightarrow$ not very informative in practice
+    \item These bounds summarize what the data, and only the data, say about the parameter of interest
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Numerical Example: Worst-Case Bounds}
+  \begin{itemize}
+    \item Suppose $Y \in [0, 1]$ (e.g., binary outcome), $\Pr(D=1) = 0.5$
+    \item $\E[Y \mid D=1] = 0.6$, \quad $\E[Y \mid D=0] = 0.4$
+    \item Na\"ive difference: $0.6 - 0.4 = 0.2$ (but selection bias?)
+    \item Worst-case bounds on ATE:
+    \begin{align*}
+      \text{Lower} &= 0.6 \times 0.5 + 0 \times 0.5 - 0.4 \times 0.5 - 1 \times 0.5 = -0.4 \\
+      \text{Upper} &= 0.6 \times 0.5 + 1 \times 0.5 - 0.4 \times 0.5 - 0 \times 0.5 = 0.8
+    \end{align*}
+    \item $\text{ATE} \in [-0.4,\; 0.8]$ --- wide, but honest!
+    \item Cannot even sign the effect without assumptions
+  \end{itemize}
+\end{frame}
+
+%% ============================================================
+%% PART 3: TIGHTENING BOUNDS WITH ASSUMPTIONS
+%% ============================================================
+
+\begin{frame}{Tightening Strategy}
+  \begin{itemize}
+    \item Worst-case bounds are often too wide to be useful
+      \item We can tighten them by adding \textbf{credible} assumptions:
+      \begin{enumerate}
+        \item Monotone treatment response (MTR)
+        \item Monotone treatment selection (MTS)
+        \item Unconfoundedness
+      \end{enumerate}
+      \item Each assumption restricts the counterfactual distributions
+      \item Assumptions can be \textbf{combined} to get tighter bounds
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Assumption 1: Monotone Treatment Response (MTR)}
+  \begin{block}{MTR Assumption}
+    $Y_i(1) \geq Y_i(0)$ for all $i$ \quad (treatment never hurts)
+  \end{block}
+  \begin{itemize}
+    \item Implies $\text{ATE} \geq 0$, so the lower bound improves
+    \item Under MTR:
+      \begin{itemize}
+        \item $\E[Y(1) \mid D=0] \geq \E[Y(0) \mid D=0] = \textcolor{hanada}{\E[Y \mid D=0]}$
+        \item $\E[Y(0) \mid D=1] \leq \E[Y(1) \mid D=1] = \textcolor{hanada}{\E[Y \mid D=1]}$
+      \end{itemize}
+    \item Bounds on ATE under MTR:
+      $$
+        \textcolor{hanada}{0} \;\leq\; \text{ATE} \;\leq\; \E[Y \mid D=1]\,p + y_{\max}(1-p) - \E[Y \mid D=0](1-p) - y_{\min}\,p
+      $$
+    \item Example: job training program ``never hurts'' earnings
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Assumption 2: Monotone Treatment Selection (MTS)}
+  \begin{block}{MTS Assumption}
+    $\E[Y(d) \mid D=1] \geq \E[Y(d) \mid D=0]$ for $d \in \{0,1\}$
+  \end{block}
+  \begin{itemize}
+    \item Those who \textit{select} into treatment have (weakly) better potential outcomes
+    \item Example: people who choose to attend college may have higher earnings potential regardless of college
+    \item Under MTS:
+      \begin{align*}
+        \E[Y(1) \mid D=0] \leq \E[Y(1) \mid D=1] =  \textcolor{hanada}{\E[Y \mid D=1]}\\
+        \E[Y(0) \mid D=1] \geq \E[Y(0) \mid D=0] = \textcolor{hanada}{\E[Y \mid D=0]}
+      \end{align*}
+    \item MTS tightens the \textbf{upper bound} on $\E[Y(1)]$ (\textbf{lower bound} for $\E[Y(0)]$)
+    \item Bounds on ATE under MTS:
+      \begin{align*}
+        &\E[Y \mid D=1]\,p + y_{\min}(1-p) - \E[Y \mid D=0](1-p) - y_{\max}\,p\\
+        &\leq\; \text{ATE} \;\leq\;\\
+        &\textcolor{hanada}{\E[Y \mid D=1] - \E[Y \mid D=0]}
+      \end{align*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Combining MTR and MTS}
+  \begin{itemize}
+    \item Assumptions can be combined to yield tighter bounds
+    \item Under \textbf{MTR $+$ MTS}:
+      $$
+        \textcolor{hanada}{0} \;\leq\; \text{ATE} \;\leq\; \textcolor{hanada}{\E[Y \mid D=1] - \E[Y \mid D=0]}
+      $$
+    \item The na\"ive treatment--control difference becomes an \textbf{upper bound}
+    \item Returning to our example ($\E[Y|D=1]=0.6$, $\E[Y|D=0]=0.4$):
+      $$
+        \text{ATE} \in [0,\; 0.2]
+      $$
+    \item Much more informative than $[-0.4,\; 0.8]$!
+    \item Credibility depends on the application: are both MTR and MTS plausible?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Assumption 3: Unconfoundedness}
+  \begin{block}{Unconfoundedness}
+    $\E[Y(d) \mid D=1] = \E[Y(d) \mid D=0] = \E[Y(d)]$ for $d \in \{0,1\}$
+  \end{block}
+  \begin{itemize}
+    \item Standard \textbf{unconfoundedness / selection on observables} assumption
+    \item Under unconfoundedness:
+      $$
+        \text{ATE} \; \textcolor{hanada}{=}\; \E[Y \mid D=1] - \E[Y \mid D=0]
+      $$
+    \item The identified set is a \textbf{singleton} --- point identification!
+    \item Partial identification nests point identification as a special case
+    \item This assumption is very strong and often implausible in observational settings
+  \end{itemize}
+\end{frame}
+
+%% ============================================================
+%% PART 4: LEE (2009) TRIMMING BOUNDS
+%% ============================================================
+
+\begin{frame}{Lee Bounds: The Sample Selection Problem}
+  \begin{itemize}
+    \item Common problem in RCTs: \textbf{sample selection / attrition}
+      \begin{itemize}
+        \item Outcome $Y$ is observed only if $S = 1$ (e.g., subject is employed, responds to survey, stays in the study)
+        \item Treatment $D$ may affect whether $S = 1$
+      \end{itemize}
+    \item If treatment changes \textit{who} is observed, comparing observed outcomes is biased even in an RCT
+    \item Example: job training $\to$ more people become employed $\to$ observed wages are a selected sample
+    \item Standard fixes require strong assumptions (Heckman selection model)
+    \item Lee (2009): bounds on treatment effects under a \textbf{single} weak assumption
+    \item Intuition: principal stratification and monotone selection assumption to get bounds for the \textit{always-observed} subgroup
+  \end{itemize}
+\end{frame}
+
+%\begin{frame}{Lee Bounds: Setup}
+%  \begin{itemize}
+%    \item $D \in \{0,1\}$: randomly assigned treatment
+%    \item $S \in \{0,1\}$: selection into the observed sample
+%    \item $Y$: outcome, observed only when $S = 1$
+%    \item Potential selection: $S(1), S(0)$; potential outcomes: $Y(1), Y(0)$
+%    \item Four principal strata (by $(S(0), S(1))$):
+%      \begin{enumerate}
+%        \item \textbf{Always-observed}: $S(0)=1, S(1)=1$
+%        \item Never-observed: $S(0)=0, S(1)=0$
+%        \item \textbf{Compliers}: $S(0)=0, S(1)=1$ (selected in \textit{because of} treatment)
+%        \item Defiers: $S(0)=1, S(1)=0$
+%      \end{enumerate}
+%    \item Target: ATE for the \textbf{always-observed} group
+%  \end{itemize}
+%\end{frame}
+% 
+%\begin{frame}{Lee Bounds: Monotonicity Assumption}
+%  \begin{block}{Monotone Selection (Lee, 2009)}
+%    Treatment can only affect selection in \textbf{one direction}:
+%    $$S_i(1) \geq S_i(0) \quad \text{for all } i$$
+%    (i.e., treatment weakly increases the probability of being observed)
+%  \end{block}
+%  \begin{itemize}
+%    \item Rules out \textbf{defiers}: no one is selected out because of treatment
+%    \item Only two types with $S=1$ under treatment: always-observed $+$ compliers
+%    \item Under control ($D=0$), all observed units are always-observed
+%    \item Under treatment ($D=1$), observed units are a \textbf{mixture} of always-observed and compliers
+%    \item The compliers ``contaminate'' the treated group $\Rightarrow$ na\"ive comparison is biased
+%  \end{itemize}
+%\end{frame}
+% 
+%\begin{frame}{Lee Bounds: The Trimming Idea}
+%  \begin{itemize}
+%    \item Key insight: we can identify the \textbf{share of compliers} among treated-and-observed:
+%      $$
+%        p_0 = \frac{\Pr(S=1 \mid D=1) - \Pr(S=1 \mid D=0)}{\Pr(S=1 \mid D=1)}
+%      $$
+%    \item $p_0$ = fraction of observed treated units that are compliers (``excess'' observations)
+%    \item Idea: \textbf{trim} the $Y \mid D=1, S=1$ distribution to remove the $p_0$ fraction of compliers
+%    \item Problem: we don't know \textit{which} treated units are compliers
+%    \item Solution: trim from \textit{both tails} to get bounds
+%  \end{itemize}
+%\end{frame}
+% 
+%\begin{frame}{Lee Bounds: Construction}
+%  \begin{block}{Lee (2009) Trimming Bounds}
+%    Under random assignment and monotone selection:
+%    \begin{align*}
+%      \text{LB} &= \E[Y \mid D=1, S=1, Y \leq y_{1-p_0}] - \E[Y \mid D=0, S=0] \\
+%      \text{UB} &= \E[Y \mid D=1, S=1, Y \geq y_{p_0}] - \E[Y \mid D=0, S=1]
+%    \end{align*}
+%    where $y_q$ is the $q$-th quantile of $Y \mid D=1, S=1$.
+%  \end{block}
+%  \begin{itemize}
+%    \item \textbf{Lower bound}: trim the \textit{top} $p_0$ fraction of treated outcomes (remove the ``best'' compliers)
+%    \item \textbf{Upper bound}: trim the \textit{bottom} $p_0$ fraction (remove the ``worst'' compliers)
+%    \item Bounds are \textbf{sharp}: no tighter bounds exist under monotone selection alone
+%  \end{itemize}
+%\end{frame}
+% 
+%\begin{frame}{Lee Bounds: Numerical Example}
+%  \begin{itemize}
+%    \item Job training RCT; outcome = wages (observed only if employed)
+%    \item $\Pr(\text{employed} \mid D=1) = 0.80$, \quad $\Pr(\text{employed} \mid D=0) = 0.70$
+%    \item Excess share: $p_0 = (0.80 - 0.70)/0.80 = 0.125$
+%    \item Among treated-and-employed, trim $12.5\%$ from each tail:
+%    \begin{itemize}
+%      \item Trim top $12.5\%$: $\E[Y \mid D=1, \text{emp}, Y \leq y_{0.875}] = \$28{,}500$
+%      \item Trim bottom $12.5\%$: $\E[Y \mid D=1, \text{emp}, Y \geq y_{0.125}] = \$34{,}000$
+%    \end{itemize}
+%    \item Control mean: $\E[Y \mid D=0, \text{emp}] = \$30{,}000$
+%    \item Lee bounds on ATE for always-employed:
+%      $$
+%        \$28{,}500 - \$30{,}000 \;\leq\; \tau \;\leq\; \$34{,}000 - \$30{,}000
+%      $$
+%      $$
+%        -\$1{,}500 \;\leq\; \tau \;\leq\; \$4{,}000
+%      $$
+%  \end{itemize}
+%\end{frame}
+% 
+%\begin{frame}{Lee Bounds: Key Properties}
+%  \begin{itemize}
+%    \item \textbf{Width} depends on differential attrition:
+%      \begin{itemize}
+%        \item If $\Pr(S=1 \mid D=1) = \Pr(S=1 \mid D=0)$: $p_0 = 0$, no trimming needed $\Rightarrow$ point identification
+%        \item Larger differential attrition $\Rightarrow$ wider bounds
+%      \end{itemize}
+%    \item \textbf{Tightening with covariates}: compute bounds within covariate cells, then average
+%      \begin{itemize}
+%        \item Always weakly tighter than unconditional bounds
+%        \item Works because monotonicity can hold conditionally
+%      \end{itemize}
+%    \item \textbf{Estimation}: straightforward --- sample quantiles $+$ trimmed means
+%    \item \textbf{Inference}: Imbens--Manski CI or bootstrap (with care at boundary)
+%  \end{itemize}
+%\end{frame}
+% 
+%\begin{frame}{Lee Bounds: When to Use}
+%  \begin{itemize}
+%    \item Ideal for RCTs or quasi-experiments with \textbf{differential attrition} or \textbf{sample selection}
+%    \item Common applications:
+%      \begin{itemize}
+%        \item Job training $\to$ employment $\to$ wages (original application)
+%        \item Education interventions $\to$ test-taking $\to$ test scores
+%        \item Health treatments $\to$ survival $\to$ quality of life
+%      \end{itemize}
+%    \item Requires:
+%      \begin{itemize}
+%        \item Random (or as-if random) treatment assignment
+%        \item Monotone selection: treatment affects observation in one direction
+%        \item Bounded support not needed (unlike Manski bounds)
+%      \end{itemize}
+%    \item Limitation: bounds are for the \textit{always-observed} subgroup, not the full population
+%  \end{itemize}
+%\end{frame}
+
+%% ============================================================
+%% PART 5: INFERENCE
+%% ============================================================
+
+\begin{frame}{Inference for Partially Identified Parameters}
+  \begin{itemize}
+    \item With point identification: CI for a point $\theta_0$
+    \item With partial identification: CI for a \textbf{set} $[\theta_L, \theta_U]$
+    \item Two distinct goals:
+      \begin{enumerate}
+        \item \textbf{Confidence set for the identified set}: covers the entire interval $[\theta_L, \theta_U]$
+        \item \textbf{Confidence set for the parameter}: covers the true $\theta_0$ wherever it lies in $[\theta_L, \theta_U]$
+      \end{enumerate}
+    \item These are different! Goal 2 produces wider intervals
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Horowitz--Manski (2000) Confidence Intervals}
+  \begin{block}{Key Idea}
+    Construct a CI that covers the \textbf{entire identified set} $[\theta_L, \theta_U]$ with probability $\geq 1-\alpha$.
+  \end{block}
+  \begin{itemize}
+    \item The Horowitz--Manski CI:
+      $$
+        \text{CI}_{1-\alpha} = \left[\hat{\theta}_L - z_{1-\alpha/2}\, \hat{\sigma}_L,\;\; \hat{\theta}_U + z_{1-\alpha/2}\, \hat{\sigma}_U\right]
+      $$
+    \item Uses standard critical value $z_{1-\alpha/2}$ applied to \textit{both} endpoints
+    \item Covers every point in $[\theta_L, \theta_U]$ simultaneously (by Bonferroni correction)
+    \item Conservative for the parameter $\theta_0$: it covers $\theta_0$ with probability $> 1-\alpha$
+    \item Simple and widely applicable, but can be unnecessarily wide
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Imbens--Manski (2004) Confidence Intervals}
+  \begin{block}{Key Idea}
+    Construct a CI that covers the true parameter $\theta_0 \in [\theta_L, \theta_U]$ with probability $\geq 1-\alpha$, accounting for sampling uncertainty in \textit{both} $\hat{\theta}_L$ and $\hat{\theta}_U$.
+  \end{block}
+  \begin{itemize}
+    \item The Imbens--Manski CI:
+      $$
+        \text{CI}_{1-\alpha} = \left[\hat{\theta}_L - c_n \, \hat{\sigma}_L,\;\; \hat{\theta}_U + c_n \, \hat{\sigma}_U\right]
+      $$
+    \item $c_n$ solves:
+      $\Phi(c_n) - \Phi\!\left(-c_n - \frac{\hat{\theta}_U - \hat{\theta}_L}{\max(\hat{\sigma}_L, \hat{\sigma}_U)}\right) = 1 - \alpha$
+    \item When the identified set shrinks to a point, $c_n \to z_{1-\alpha/2}$ (standard CI)
+    \item When the identified set is wide, $c_n \to z_{1-\alpha}$ (one-sided-like)
+  \end{itemize}
+\end{frame}
+
+%\begin{frame}{Practical Considerations for Inference}
+%  \begin{itemize}
+%    \item \textbf{Projection}: if the identified set is defined by many inequalities, project onto the parameter of interest
+%    \item \textbf{Bootstrap}: can be used but requires care
+%      \begin{itemize}
+%        \item Standard bootstrap is inconsistent when $\theta_0$ is on the boundary of the identified set
+%        \item Use subsampling or specialized methods (e.g., Andrews and Shi, 2013)
+%      \end{itemize}
+%    \item \textbf{Half-median unbiased estimation}: Chernozhukov, Lee, and Rosen (2013) provide a framework for intersection bounds
+%    \item \textbf{Criterion function approaches}: moment inequality methods (Andrews and Soares, 2010)
+%  \end{itemize}
+%\end{frame}
+
+%% ============================================================
+%% PART 6: APPLICATIONS (commented out)
+%% ============================================================
+
+%\begin{frame}{Application 1: Returns to Schooling}
+%  \begin{itemize}
+%    \item Manski (1990, 1997): what can we learn about the return to schooling without strong assumptions?
+%    \item Point identification requires selection on observables or a valid instrument
+%    \item Partial identification approach:
+%      \begin{itemize}
+%        \item No-assumption bounds: extremely wide
+%        \item Add MTR (more schooling $\Rightarrow$ higher earnings): tighter
+%        \item Add MTS (high-ability people select more schooling): tighter still
+%        \item Add MIV (e.g., parental education as monotone IV): even tighter
+%      \end{itemize}
+%    \item Manski and Pepper (2000) show that combining MTR $+$ MTS $+$ MIV yields bounds that are informative enough to conclude that returns are positive and economically meaningful
+%  \end{itemize}
+%\end{frame}
+%
+%\begin{frame}{Application 2: Ecological Inference}
+%  \begin{itemize}
+%    \item Problem: only aggregate data available, but individual-level parameters are of interest
+%    \item Example: voting behavior by race, but only precinct-level vote totals and demographics are observed
+%    \item This is a partial identification problem:
+%      \begin{itemize}
+%        \item Aggregate data constrain individual behavior but don't pin it down
+%        \item Fréchet--Hoeffding bounds provide worst-case intervals
+%      \end{itemize}
+%    \item Duncan--Davis (1953) bounds: earliest example of partial identification reasoning
+%    \item Additional assumptions (e.g., geographic homogeneity) tighten the bounds
+%  \end{itemize}
+%\end{frame}
+
+%% ============================================================
+%% PART 6: BROADER PERSPECTIVE
+%% ============================================================
+
+\begin{frame}{Partial Identification Beyond Treatment Effects}
+  \begin{itemize}
+    \item The logic of partial identification extends far beyond ATE:
+      \begin{itemize}
+        \item \textbf{Distributional treatment effects}: bounds on CDFs, quantile effects
+        \item \textbf{Structural models}: set-identified structural parameters (e.g., entry games)
+        \item \textbf{Measurement error}: bounds when mismeasurement is bounded
+        \item \textbf{Missing data}: general patterns of nonresponse
+        \item \textbf{Regression discontinuity}: extrapolation away from the cutoff
+      \end{itemize}
+    \item Unifying theme: clearly separate what the data \textit{can} tell us from what our \textit{assumptions} tell us
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Sensitivity Analysis and Partial Identification}
+  \begin{itemize}
+    \item Related idea: \textbf{sensitivity analysis} asks how robust conclusions are to assumption violations
+    \item Partial identification is a form of sensitivity analysis:
+      \begin{itemize}
+        \item Start with strong assumptions (point ID)
+        \item Relax assumptions incrementally
+        \item Track how the identified set widens
+      \end{itemize}
+    \item Rosenbaum-style sensitivity analysis: how much unmeasured confounding would be needed to overturn a finding?
+    \item Connection: both approaches quantify the \textit{fragility} of causal conclusions
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Summing Up}
+  \begin{enumerate}
+    \item Partial identification = what we can learn under \textbf{credible} assumptions
+    \vspace{0.15cm}
+    \item Worst-case bounds require only bounded outcomes; typically very wide
+    \vspace{0.15cm}
+    \item Monotonicity assumptions (MTR, MTS) substantially tighten bounds
+    \vspace{0.15cm}
+    \item Lee (2009) trimming bounds handle sample selection with a single monotonicity assumption
+    \vspace{0.15cm}
+    \item Inference requires specialized methods (Horowitz--Manski, Imbens--Manski, moment inequalities)
+    \vspace{0.15cm}
+    \item \textit{Transparent trade-off} between assumption strength and conclusion strength
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Key References}
+  \begin{itemize}
+    \footnotesize
+    %% Worst-case bounds
+    \item \textsc{Manski, C.} (1990): ``Nonparametric Bounds on Treatment Effects,'' \textit{American Economic Review Papers and Proceedings}, 80, 319--323.
+    \item \textsc{Manski, C.} (2003): \textit{Partial Identification of Probability Distributions}. New York: Springer.
+    %% Monotonicity assumptions (MTR, MTS, MIV)
+    \item \textsc{Manski, C. and J. Pepper} (2000): ``Monotone Instrumental Variables: With an Application to the Returns to Schooling,'' \textit{Econometrica}, 68, 997--1010.
+    %% Lee bounds
+    \item \textsc{Lee, D.} (2009): ``Training, Wages, and Sample Selection: Estimating Sharp Bounds on Treatment Effects,'' \textit{Review of Economic Studies}, 76, 1071--1102.
+    %% Inference
+    \item \textsc{Horowitz, J. and C. Manski} (2000): ``Nonparametric Analysis of Randomized Experiments with Missing Covariate and Outcome Data,'' \textit{Journal of the American Statistical Association}, 95, 77--84.
+    \item \textsc{Imbens, G. and C. Manski} (2004): ``Confidence Intervals for Partially Identified Parameters,'' \textit{Econometrica}, 72, 1845--1857.
+    %% General survey
+    \item \textsc{Tamer, E.} (2010): ``Partial Identification in Econometrics,'' \textit{Annual Review of Economics}, 2, 167--195.
+  \end{itemize}
+\end{frame}
+
+\end{document}
